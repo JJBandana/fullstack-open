@@ -1,18 +1,13 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 
-const Header = ({course}) => (
-  <>
-  <h1>{course}</h1>
-  </>
-)
+const Header = ({course}) => <h1>{course}</h1>
+
 
 const Part = (props) => (
-  <>
     <p>
       {props.part} {props.exercises}
     </p>
-  </>
 )
 
 const Content = (props) => {
