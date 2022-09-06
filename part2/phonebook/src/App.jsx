@@ -2,42 +2,56 @@ import React, { useState, useEffect } from 'react'
 import Filter from './components/Filter'
 import Form from './components/Form'
 import Persons from './components/Persons'
-import axios from 'axios'
+import service from './services/contacts'
+import Notification from './components/Notification'
+import Error from './components/Error'
 
 const App = () => {
   const [ persons, setPersons ] = useState([])
   const [ newName, setNewName ] = useState('a new contact name...')
   const [ newNum, setNewNum ] = useState('a new contact number...')
   const [ searchTerm, setSearchTerm] = useState('')
+  const [ msg, setMsg ] = useState('You are doing great!')
+  const [ errMsg, setErrMsg] = useState(null)
 
   useEffect(()=>{
-    axios.get('http://localhost:3001/persons')
-    .then(res => {
-      console.log("promise fulfilled")
-      setPersons(res.data)
-    })
+    service.getAll()
+    .then(init => setPersons(init))
   }, [])
 
   const addContact = event => {
     event.preventDefault()
     const contactObject = { name: newName, number: newNum };
-
     if (!newName || !newNum){
       alert("Please fill the fields")
       return
     } 
 
     const repeatPerson = persons.find(contact => contact.name.toLowerCase() === newName.toLowerCase())
-    const repeatNum = persons.find(contact => contact.number === contact.number)
 
     if(repeatPerson){
-      alert(`${newName} is already added to phonebook`)
-      return
-    }
-    setPersons(persons.concat(contactObject))
-    setNewName('')
-    setNewNum('')
-    
+      if(confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)){
+        service.update(repeatPerson.id, contactObject)
+        .then(res =>{
+          setMsg(`Updated ${contactObject.name}`)
+          setTimeout(()=>setMsg(null), 5000)
+          contactObject.id = res.id
+          setPersons(persons.map(p => p.name !== contactObject.name? p : contactObject))
+        })
+        .catch((error)=>{
+          console.log(error)
+          setErrMsg(`Information from ${contactObject.name} has already been removed from server`)
+          setTimeout(()=>setErrMsg(null), 5000)
+        })
+      }
+    } else {
+    service.create(contactObject).then(returned => {
+      setMsg(`Added ${contactObject.name}`)
+      setTimeout(()=>setMsg(null), 5000)
+      setPersons(persons.concat(returned))
+      setNewName('')
+      setNewNum('')
+    })}
   }
 
   const handleNameChange = event => setNewName(event.target.value)
@@ -46,14 +60,28 @@ const App = () => {
 
   const handleFilter = event => setSearchTerm(event.target.value.toLowerCase())
 
+  const deletePerson = event => {
+    if(confirm(`delete ${event.target.name}?`)){
+      service.remove(event.target.id).then(() => {    
+        setPersons(persons.filter(per => per.id.toString() !== event.target.id))
+      })
+      .catch(error =>{
+        console.log(error)
+        setMsg('Contact was already removed from phonebook')
+        setTimeout(()=> setMsg(null), 5000)
+      }
+      )
+    }
+  }
+  
   return (
     <div>
-      <h2>Phonebook</h2>
+      <h1>Phonebook</h1>
+      <Notification message={msg} />
+      <Error message={errMsg} />
       <Filter handleFilter={handleFilter} />
-      <h3>Add a new</h3>
       <Form onSubmit={addContact} newName={newName} newNum={newNum} handleNameChange={handleNameChange} handleNumChange={handleNumChange} />
-      <h2>Numbers</h2>
-      <Persons persons={persons} searchTerm={searchTerm}/>
+      <Persons persons={persons} searchTerm={searchTerm} deletePerson={deletePerson} />
     </div>
   )
 }

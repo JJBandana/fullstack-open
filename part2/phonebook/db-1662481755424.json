@@ -22,7 +22,7 @@
     },
     {
       "name": "Juan Jose Briasco",
-      "number": "123123123",
+      "number": "11-22-1234567",
       "id": 5
     },
     {
@@ -39,16 +39,6 @@
       "name": "Milagros Villamayor",
       "number": "5959049",
       "id": 8
-    },
-    {
-      "name": "Juanxi",
-      "number": "1234124512545",
-      "id": 9
-    },
-    {
-      "name": "Franco",
-      "number": "123123",
-      "id": 10
     }
   ]
 }
